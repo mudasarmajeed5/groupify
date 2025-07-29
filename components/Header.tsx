@@ -19,6 +19,7 @@ const Header = async () => {
                     </> : <Button onClick={() => redirect("/login")}>Login</Button>
                 }
                 <Button>Invite</Button>
+                
             </div>
         </nav>
     )
