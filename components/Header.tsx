@@ -22,15 +22,23 @@ const Header = () => {
   const router = useRouter();
 
   useEffect(() => {
+    const supabase = createClient();
     const fetchUser = async () => {
-      const supabase = createClient();
       const { data, error } = await supabase.auth.getUser();
       if (!error && data?.user) {
         setUser(data.user);
       }
-    };
+      else setUser(null);
 
+    };
     fetchUser();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    })
+    return () => {
+      subscription.unsubscribe();
+    }
+
   }, []);
 
   const userInitial = user?.email?.charAt(0).toUpperCase() ?? "U";
@@ -45,7 +53,7 @@ const Header = () => {
       <div className="flex items-center space-x-4">
         {
           isDashboard &&
-          <Button>Invite</Button>
+          <Button>Invite to App</Button>
         }
         {user ? (
           <DropdownMenu>
