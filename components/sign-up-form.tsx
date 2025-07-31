@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { handleGoogleLogin } from "@/app/auth/helpers/google-login";
+import { Key } from "lucide-react";
 
 export function SignUpForm({
   className,
@@ -40,14 +42,26 @@ export function SignUpForm({
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}`,
+          emailRedirectTo: `${window.location.origin}/dashboard`,
         },
       });
-      if (error) throw error;
+      if (signUpError) throw signUpError;
+      if (data && data.user?.email) {
+        const { error: insertError } = await supabase.from("users").insert({
+          id: data.user.id,
+          name: data.user?.email.split("@")[0],
+          profile_url: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png",
+        })
+        if (insertError) {
+          console.error("Insert failed", insertError.message);
+          router.push('/auth/error');
+          return;
+        }
+      }
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
@@ -71,7 +85,7 @@ export function SignUpForm({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="john-doe@gmail.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -84,6 +98,7 @@ export function SignUpForm({
                 <Input
                   id="password"
                   type="password"
+                  placeholder="********"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -96,6 +111,7 @@ export function SignUpForm({
                 <Input
                   id="repeat-password"
                   type="password"
+                  placeholder="********"
                   required
                   value={repeatPassword}
                   onChange={(e) => setRepeatPassword(e.target.value)}
@@ -105,6 +121,24 @@ export function SignUpForm({
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Creating an account..." : "Sign up"}
               </Button>
+              <div className="flex text-xs dark:text-gray-300 gap-3 items-center">
+                <span className="border-b flex-1 border-gray-300"></span>
+                <span className="uppercase">or, continue with</span>
+                <span className="border-b flex-1 border-gray-300"></span>
+              </div>
+              <div className="flex gap-2 items-center">
+                <Button onClick={handleGoogleLogin} className="w-full -mt-2 flex items-center gap-2" disabled={isLoading}>
+                  <Key />
+                  <span>
+                    Google
+                  </span>
+                </Button><Button onClick={handleGoogleLogin} className="w-full -mt-2 flex items-center gap-2" disabled={isLoading}>
+                  <Key />
+                  <span>
+                    Facebook
+                  </span>
+                </Button>
+              </div>
             </div>
             <div className="mt-4 text-center text-sm">
               Already have an account?{" "}

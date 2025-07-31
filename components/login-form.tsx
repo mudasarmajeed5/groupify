@@ -1,5 +1,5 @@
 "use client";
-
+import { handleGoogleLogin } from "@/app/auth/helpers/google-login"
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Key } from "lucide-react";
 
 export function LoginForm({
   className,
@@ -39,7 +40,7 @@ export function LoginForm({
       });
       if (error) throw error;
       // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/");
+      router.push("/dashboard");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -64,7 +65,7 @@ export function LoginForm({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="john-doe@gmail.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -83,6 +84,7 @@ export function LoginForm({
                 <Input
                   id="password"
                   type="password"
+                  placeholder="********"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -92,6 +94,24 @@ export function LoginForm({
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
+              <div className="flex text-xs dark:text-gray-300 gap-3 items-center">
+                <span className="border-b flex-1 border-gray-300"></span>
+                <span className="uppercase">or, continue with</span>
+                <span className="border-b flex-1 border-gray-300"></span>
+              </div>
+              <div className="flex gap-2 items-center">
+                <Button onClick={handleGoogleLogin} className="w-full -mt-2 flex items-center gap-2" disabled={isLoading}>
+                  <Key />
+                  <span>
+                    Google
+                  </span>
+                </Button><Button onClick={handleGoogleLogin} className="w-full -mt-2 flex items-center gap-2" disabled={isLoading}>
+                  <Key />
+                  <span>
+                    Facebook
+                  </span>
+                </Button>
+              </div>
             </div>
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}

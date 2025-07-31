@@ -3,6 +3,8 @@ import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+import { Toaster } from "sonner";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -34,6 +36,8 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <Toaster/>
+          <Header />
           {children}
           <Footer/>
         </ThemeProvider>
