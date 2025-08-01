@@ -1,11 +1,21 @@
 import { createClient } from "@/lib/supabase/client";
-export const handleGoogleLogin = async () => {
+type GoogleLoginProps = {
+    inviteId: string | null;
+}
+export const handleGoogleLogin = async ({ inviteId }: GoogleLoginProps) => {
     const supabase = createClient();
-
+    let constructedUri = ''
+    const redirectUri = `${window.location.origin}/auth/callback?next=`;
+    if (!inviteId) {
+        constructedUri = redirectUri + "/dashboard"
+    }
+    else {
+        constructedUri = redirectUri + `/invite?invite-id=${inviteId}`
+    }
     const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-            redirectTo: "http://localhost:3000/auth/callback?next=/dashboard"
+            redirectTo: constructedUri
         }
     });
     if (error) {

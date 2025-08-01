@@ -1,15 +1,37 @@
+"use client"
 import { Card, CardHeader, CardDescription, CardTitle, CardContent } from '@/components/ui/card'
 import { Calendar } from 'lucide-react'
 import { formatDate } from '@/utils/formatDate'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Room } from '@/types/dashboard-types'
-
+import { createClient } from '@/lib/supabase/client'
+import { toast } from 'sonner'
+import { useState } from 'react'
 type JoinedRoomProps = {
+    handleLeaveRoomUI: (room_Id: string) => void;
+    userId: string
     joinedRooms: Room[],
     handleJoinRoom: (room_id: string) => void;
 }
-const JoinedRoom = ({ joinedRooms, handleJoinRoom }: JoinedRoomProps) => {
+const JoinedRoom = ({ userId, joinedRooms, handleJoinRoom, handleLeaveRoomUI }: JoinedRoomProps) => {
+    const supabase = createClient();
+    const [isLoading, setIsLoading] = useState(false);
+    const handleLeaveRoom = async (room_id: string) => {
+        setIsLoading(true);
+        const { error: deleteError } = await supabase.from("user_rooms").delete().eq("room_id", room_id)
+            .eq("user_id", userId);
+        if (deleteError) {
+            console.log("Failed to leave room", deleteError.message);
+            setIsLoading(false);
+        }
+        else {
+            toast.success("Room Left");
+            handleLeaveRoomUI(room_id);
+            setIsLoading(false);
+        }
+    }
+
     return (
         <>
             {joinedRooms.length > 0 && joinedRooms.map((room) => (
@@ -38,8 +60,8 @@ const JoinedRoom = ({ joinedRooms, handleJoinRoom }: JoinedRoomProps) => {
                             >
                                 Enter Room
                             </Button>
-                            <Button size="sm" variant="destructive">
-                                Leave
+                            <Button onClick={() => handleLeaveRoom(room.room_id)} size="sm" disabled={isLoading} variant="destructive">
+                                {isLoading ? "Leaving": "Leave"}
                             </Button>
                         </div>
                     </CardContent>

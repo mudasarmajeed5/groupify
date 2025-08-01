@@ -3,26 +3,47 @@ import { Button } from "@/components/ui/button";
 import { getJoinedRooms, getRooms } from "./actions/get-rooms";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
-import { Room } from "@/types/dashboard-types";
+import { type Room } from "@/types/dashboard-types";
 import { Users, RefreshCw } from "lucide-react";
 import CreateRoom from "./components/CreateRoom";
 import RoomSkeleton from "./components/RoomLoader";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import UserRoom from "./components/UserRooms";
 import JoinedRoom from "./components/JoinedRooms";
 import JoinRoomDialog from "./components/JoinRoomDialog";
+import { deleteRoom } from "./actions/delete-room";
 export default function DashboardPage() {
+  const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [joinedRooms, setJoinedRooms] = useState<Room[]>([])
-
-  const [loading, setLoading] = useState(true); // tracks fetch status
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const onRoomCreate = (room: Room) => {
     setRooms((prev) => [...prev, room]);
 
   }
 
-
+  const copyInviteLink = (room_id: string) => {
+    navigator.clipboard.writeText(`${window.location.origin}/invite?invite-id=${room_id}`)
+    toast.success("Invite link copied to clipboard")
+  }
+  const handleLeaveRoomUI = (room_id: string) => {
+    const updatedRooms = joinedRooms.filter((room: Room) => room.room_id !== room_id)
+    setJoinedRooms(updatedRooms);
+  }
+  const handleDeleteRoom = async (roomId: string) => {
+    if (!userId || !roomId) return;
+    setIsDeleting(true);
+    const result = await deleteRoom({ userId, roomId })
+    if (result.deleteId) {
+      toast.success("Room Deleted");
+      const updatedRooms = rooms.filter((room: Room) => room.room_id !== result.deleteId);
+      setRooms(updatedRooms);
+    }
+    setIsDeleting(false);
+  }
   const getUserRooms = async () => {
     setLoading(true);
     const supabase = createClient();
@@ -42,7 +63,7 @@ export default function DashboardPage() {
     setLoading(false);
   };
   const handleJoinRoom = (room_id: string) => {
-    console.log(room_id);
+    router.push(`/dashboard/room/${room_id}`)
   }
   const copyInviteId = (room_id: string) => {
     navigator.clipboard.writeText(room_id)
@@ -88,7 +109,7 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <UserRoom copyInviteId={copyInviteId} handleJoinRoom={handleJoinRoom} rooms={rooms} />
+            <UserRoom handleDeleteRoom={handleDeleteRoom} copyInviteId={copyInviteId} copyInviteLink={copyInviteLink} handleJoinRoom={handleJoinRoom} rooms={rooms} isDeleting={isDeleting} />
           </div>
         )}
 
@@ -100,7 +121,9 @@ export default function DashboardPage() {
             </p>
           </div>
           <div>
-            <JoinRoomDialog userId={userId} handleJoinRoom={handleJoinRoom} />
+            {
+              userId && <JoinRoomDialog getUserRooms={getUserRooms} userId={userId} />
+            }
           </div>
 
         </div>
@@ -120,7 +143,9 @@ export default function DashboardPage() {
           ) :
             (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <JoinedRoom joinedRooms={joinedRooms} handleJoinRoom={handleJoinRoom} />
+                {
+                  userId && <JoinedRoom handleLeaveRoomUI={handleLeaveRoomUI} userId={userId} joinedRooms={joinedRooms} handleJoinRoom={handleJoinRoom} />
+                }
               </div>
             )}
       </div>

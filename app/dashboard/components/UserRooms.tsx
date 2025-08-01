@@ -5,11 +5,14 @@ import { formatDate } from '@/utils/formatDate'
 import { Calendar, Copy, Users } from 'lucide-react'
 import React from 'react'
 type UserRoomProps = {
-    rooms: Room[],
-    copyInviteId: (room_id: string) => void;
+    rooms: Room[];
+    isDeleting: boolean;
+    copyInviteLink: (room_id: string) => void;
     handleJoinRoom: (room_id: string) => void;
+    copyInviteId: (room_id: string) => void;
+    handleDeleteRoom: (roomId: string) => void;
 }
-const UserRoom = ({ rooms, copyInviteId, handleJoinRoom }: UserRoomProps) => {
+const UserRoom = ({ isDeleting, rooms, copyInviteLink, handleJoinRoom, copyInviteId, handleDeleteRoom }: UserRoomProps) => {
 
     return (
         <>
@@ -20,8 +23,8 @@ const UserRoom = ({ rooms, copyInviteId, handleJoinRoom }: UserRoomProps) => {
                             <CardTitle className="flex items-center justify-between">
                                 <span className="truncate">{room.room_name}</span>
                                 <span className="flex gap-1 text-xs">
-                                    <Button variant={"secondary"} className="flex items-center gap-1 text-xs border" onClick={() => copyInviteId(room.room_id)}>Invite <Users className="h-3 w-3 text-muted-foreground flex-shrink-0" /></Button>
-                                    <Button variant={"outline"} className="flex items-center gap-1 text-xs border" onClick={() => copyInviteId(room.room_id)}>Copy ID<Copy className='h-3 w-3 text-muted-foreground flex-shrink-0'/></Button>
+                                    <Button variant={"secondary"} className="flex items-center gap-1 text-xs border" onClick={() => copyInviteLink(room.room_id)}>Invite <Users className="h-3 w-3 text-muted-foreground flex-shrink-0" /></Button>
+                                    <Button variant={"outline"} className="flex items-center gap-1 text-xs border" onClick={() => copyInviteId(room.room_id)}>Copy ID<Copy className='h-3 w-3 text-muted-foreground flex-shrink-0' /></Button>
                                 </span>
                             </CardTitle>
                             <CardDescription className="line-clamp-2">
@@ -43,8 +46,8 @@ const UserRoom = ({ rooms, copyInviteId, handleJoinRoom }: UserRoomProps) => {
                                 >
                                     Enter Room
                                 </Button>
-                                <Button size="sm" variant="outline">
-                                    Settings
+                                <Button disabled={isDeleting} onClick={() => handleDeleteRoom(room.room_id)} size="sm" variant="outline">
+                                    {isDeleting ? "Deleting" : "Delete"}
                                 </Button>
                             </div>
                         </CardContent>

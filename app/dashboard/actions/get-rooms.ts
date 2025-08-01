@@ -1,6 +1,6 @@
 "use server";
 import { createClient } from "@/lib/supabase/server";
-import { Room } from "@/types/dashboard-types";
+import { type Room } from "@/types/dashboard-types";
 export async function getRooms(userId: string | null) {
     if (!userId) return;
     const supabase = await createClient();

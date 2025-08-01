@@ -16,12 +16,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Key } from "lucide-react";
-
+import { useSearchParams } from "next/navigation";
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
+  const searchParams = useSearchParams();
+  const inviteId = searchParams.get('invite-id');
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,7 +42,12 @@ export function LoginForm({
       });
       if (error) throw error;
       // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/dashboard");
+      if(!inviteId){
+        router.push("/dashboard");
+      }
+      else{
+        router.push(`/invite?invite-id=${inviteId}`)
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -100,12 +107,12 @@ export function LoginForm({
                 <span className="border-b flex-1 border-gray-300"></span>
               </div>
               <div className="flex gap-2 items-center">
-                <Button onClick={handleGoogleLogin} className="w-full -mt-2 flex items-center gap-2" disabled={isLoading}>
+                <Button onClick={()=>handleGoogleLogin({inviteId})} className="w-full -mt-2 flex items-center gap-2" disabled={isLoading}>
                   <Key />
                   <span>
                     Google
                   </span>
-                </Button><Button onClick={handleGoogleLogin} className="w-full -mt-2 flex items-center gap-2" disabled={isLoading}>
+                </Button><Button onClick={()=>handleGoogleLogin({inviteId})} className="w-full -mt-2 flex items-center gap-2" disabled={isLoading}>
                   <Key />
                   <span>
                     Facebook
