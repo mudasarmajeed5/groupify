@@ -15,8 +15,8 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { handleGoogleLogin } from "@/app/auth/helpers/google-login";
-import { Key } from "lucide-react";
+// import { handleGoogleLogin } from "@/app/auth/helpers/google-login";
+// import { Key } from "lucide-react";
 
 export function SignUpForm({
   className,
@@ -54,7 +54,7 @@ export function SignUpForm({
         const { error: insertError } = await supabase.from("users").insert({
           id: data.user.id,
           name: data.user?.email.split("@")[0],
-          profile_url: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png",
+          profile_url: "/avatars/default-avatar3.jpg",
         })
         if (insertError) {
           console.error("Insert failed", insertError.message);
@@ -127,17 +127,18 @@ export function SignUpForm({
                 <span className="border-b flex-1 border-gray-300"></span>
               </div>
               <div className="flex gap-2 items-center">
-                <Button onClick={handleGoogleLogin} className="w-full -mt-2 flex items-center gap-2" disabled={isLoading}>
+                {/* <Button onClick={()=>handleGoogleLogin(inviteId)} className="w-full -mt-2 flex items-center gap-2" disabled={isLoading}>
                   <Key />
                   <span>
                     Google
                   </span>
-                </Button><Button onClick={handleGoogleLogin} className="w-full -mt-2 flex items-center gap-2" disabled={isLoading}>
+                </Button>
+                <Button onClick={()=>handleGoogleLogin(inviteId)} className="w-full -mt-2 flex items-center gap-2" disabled={isLoading}>
                   <Key />
                   <span>
                     Facebook
                   </span>
-                </Button>
+                </Button> */}
               </div>
             </div>
             <div className="mt-4 text-center text-sm">

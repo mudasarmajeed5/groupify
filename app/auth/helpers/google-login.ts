@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 type GoogleLoginProps = {
-    inviteId: string | null;
+    inviteId?: string | null;
 }
 export const handleGoogleLogin = async ({ inviteId }: GoogleLoginProps) => {
     const supabase = createClient();

@@ -4,7 +4,9 @@ type RoomProps = {
 const Room = async ({ params }: RoomProps) => {
     const { room: roomId } = await params;
     return (
-        <div>{roomId}</div>
+        <div className="">
+            {roomId}
+        </div>
     )
 }
 
