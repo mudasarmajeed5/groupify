@@ -35,11 +35,7 @@ export const RenderTodos = ({ roomId }: { roomId: string }) => {
     // Update todo status in database
     const updateTodoStatus = async (todoId: string, newStatus: Todo['status']) => {
         try {
-            const updateData: { status: Todo['status']; completed_at?: string } = { status: newStatus };
-
-            if (newStatus === "completed") {
-                updateData.completed_at = new Date().toISOString();
-            }
+            const updateData: { status: Todo['status']; } = { status: newStatus };
 
             const { error } = await supabase
                 .from('todos')
@@ -62,11 +58,17 @@ export const RenderTodos = ({ roomId }: { roomId: string }) => {
 
         const taskId = active.id as string;
         const newStatus = over.id as Todo['status'];
-
+        let completedAt: string | null;
+        if(newStatus === "completed"){
+           completedAt = new Date().toISOString();
+        }
+        else{
+            completedAt = null;
+        }
         // Optimistic update - update UI immediately
         setTodos(prevTodos =>
             prevTodos.map(todo =>
-                todo.id === taskId ? { ...todo, status: newStatus } : todo
+                todo.id === taskId ? { ...todo, status: newStatus, completed_at: completedAt } : todo
             )
         );
 

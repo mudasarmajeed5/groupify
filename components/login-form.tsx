@@ -107,12 +107,12 @@ export function LoginForm({
                 <span className="border-b flex-1 border-gray-300"></span>
               </div>
               <div className="flex gap-2 items-center">
-                <Button onClick={()=>handleGoogleLogin({inviteId})} className="w-full -mt-2 flex items-center gap-2" disabled={isLoading}>
+                <Button onClick={()=>handleGoogleLogin({inviteId})} className="flex-1 -mt-2 flex items-center gap-2" disabled={isLoading}>
                   <Key />
                   <span>
                     Google
                   </span>
-                </Button><Button onClick={()=>handleGoogleLogin({inviteId})} className="w-full -mt-2 flex items-center gap-2" disabled={isLoading}>
+                </Button><Button onClick={()=>handleGoogleLogin({inviteId})} className="-mt-2 flex-1 flex items-center gap-2" disabled={isLoading}>
                   <Key />
                   <span>
                     Facebook

@@ -8,17 +8,24 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { Eye, Calendar, Clock, User, Flag, CheckCircle, MessageCircle, FileText, Send } from "lucide-react";
-import React, { useState } from 'react'
-import { Todo,TodoComment } from "@/types/room-types";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
+import { Eye, Calendar, Clock, User, Flag, CheckCircle, MessageCircle, FileText, Send } from "lucide-react";
+import React, { useEffect, useState } from 'react'
+import { Todo, TodoComment } from "@/types/room-types";
+import { createClient } from "@/lib/supabase/client";
+import { useUserStore } from "@/stores/userStore";
+import { useRoomStore } from "@/stores/useRoomStore";
+import { toast } from "sonner";
 const TodoActivity = ({ todo }: { todo: Todo }) => {
+    const userId = useUserStore((state) => state.userId)
+    const roomId = useRoomStore((state) => state.roomId);
+    const members = useRoomStore((state) => state.roomMembers);
     const [activeTab, setActiveTab] = useState<'details' | 'activity'>('details');
     const [newComment, setNewComment] = useState('');
-
-    // Mock comments data
-    const comments: TodoComment[] = [
-    ];
+    const [comments, setComments] = useState<TodoComment[]>([]);
+    const supabase = createClient();
+    const [isSending, setIsSending] = useState(false);
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -27,7 +34,15 @@ const TodoActivity = ({ todo }: { todo: Todo }) => {
             day: 'numeric'
         });
     };
-
+    const getTaskComments = async () => {
+        const { data: comments, error } = await supabase.from("todo_comments").select("*").eq("todo_id", todo.id)
+        if (error) {
+            toast.error(error.message)
+        }
+        else {
+            setComments(comments);
+        }
+    }
     const formatTime = (dateString: string) => {
         return new Date(dateString).toLocaleTimeString('en-US', {
             hour: '2-digit',
@@ -43,14 +58,51 @@ const TodoActivity = ({ todo }: { todo: Todo }) => {
             default: return 'border-border text-foreground';
         }
     };
+    const posterDetails = (id: string | null) => {
+        if (!id) return;
+        const foundMember = members.find((member) => member.user_id == id);
+        if (foundMember) {
+            const user = Array.isArray(foundMember.user) ? foundMember.user[0] : foundMember.user;
+            return { name: user.name, profile_url: user.profile_url };
+        }
+    }
 
-    const handleSendComment = () => {
+    const handleSendComment = async () => {
+        setIsSending(true);
         if (newComment.trim()) {
-            // Handle comment submission here
-            console.log('Sending comment:', newComment);
+            const { error: insertError } = await supabase.from("todo_comments").insert({
+                todo_id: todo.id,
+                commented_by: userId,
+                comment: newComment,
+                room_id: roomId,
+            })
+            if (insertError) {
+                toast.error(insertError.message)
+            }
             setNewComment('');
         }
+        setIsSending(false);
     };
+    useEffect(() => {
+        getTaskComments();
+        const channel = supabase.channel(`todos_room_${todo.id}`)
+            .on("postgres_changes", {
+                event: "*",
+                schema: "public",
+                table: "todo_comments"
+            },
+                (payload) => {
+                    if (payload.eventType == "INSERT") {
+                        const newComment = payload.new as TodoComment;
+                        setComments(prevComments => [...prevComments, newComment])
+                    }
+                }
+            ).subscribe();
+        return () => {
+            supabase.removeChannel(channel)
+        }
+
+    }, [])
 
     return (
         <Dialog>
@@ -68,22 +120,20 @@ const TodoActivity = ({ todo }: { todo: Todo }) => {
                 <div className="flex border-b mb-6">
                     <button
                         onClick={() => setActiveTab('details')}
-                        className={`flex items-center px-4 py-2 font-medium text-sm transition-colors ${
-                            activeTab === 'details'
-                                ? 'border-b-2 border-primary text-primary'
-                                : 'text-muted-foreground hover:text-foreground'
-                        }`}
+                        className={`flex items-center px-4 py-2 font-medium text-sm transition-colors ${activeTab === 'details'
+                            ? 'border-b-2 border-primary text-primary'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
                     >
                         <FileText className="h-4 w-4 mr-2" />
                         Task Details
                     </button>
                     <button
                         onClick={() => setActiveTab('activity')}
-                        className={`flex items-center px-4 py-2 font-medium text-sm transition-colors ${
-                            activeTab === 'activity'
-                                ? 'border-b-2 border-primary text-primary'
-                                : 'text-muted-foreground hover:text-foreground'
-                        }`}
+                        className={`flex items-center px-4 py-2 font-medium text-sm transition-colors ${activeTab === 'activity'
+                            ? 'border-b-2 border-primary text-primary'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
                     >
                         <MessageCircle className="h-4 w-4 mr-2" />
                         Activity ({comments.length})
@@ -134,18 +184,28 @@ const TodoActivity = ({ todo }: { todo: Todo }) => {
                                         <User className="h-4 w-4 text-muted-foreground mr-2" />
                                         <p className="text-sm font-medium text-muted-foreground">Assigned To</p>
                                     </div>
-                                    <p className="font-medium">
-                                        {todo.assigned_to || "Unassigned"}
-                                    </p>
+                                    {(() => {
+                                        const assignedTo = posterDetails(todo.assigned_to);
+                                        return (
+                                            <p className="font-medium">
+                                                {assignedTo?.name}
+                                            </p>
+                                        )
+                                    })()}
                                 </div>
                                 <div className="border rounded-lg p-4">
                                     <div className="flex items-center mb-2">
                                         <User className="h-4 w-4 text-muted-foreground mr-2" />
                                         <p className="text-sm font-medium text-muted-foreground">Assigned By</p>
                                     </div>
-                                    <p className="font-medium">
-                                        {todo.created_by || todo.created_by || "Unknown"}
-                                    </p>
+                                    {(() => {
+                                        const assignedBy = posterDetails(todo.created_by);
+                                        return (
+                                            <p className="font-medium">
+                                                {assignedBy?.name}
+                                            </p>
+                                        )
+                                    })()}
                                 </div>
                             </div>
 
@@ -188,36 +248,41 @@ const TodoActivity = ({ todo }: { todo: Todo }) => {
                             <div className="flex-1 border rounded-lg p-3 mb-4 min-h-[400px] max-h-[500px] overflow-y-auto">
                                 <div className="space-y-3">
                                     {comments.length > 0 ? (
-                                        comments.map(comment => (
-                                            <div key={comment.id} className="flex items-start space-x-2">
-                                                {/* Avatar */}
-                                                <div className="w-6 h-6 border rounded-full flex items-center justify-center flex-shrink-0">
-                                                    <span className="text-xs font-medium">
-                                                        {comment.commented_by.split(' ').map(n => n[0]).join('').toUpperCase()}
-                                                    </span>
-                                                </div>
-                                                
-                                                {/* Message Bubble */}
-                                                <div className="flex-1">
-                                                    <div className="border rounded-md px-3 py-2">
-                                                        <div className="flex items-center justify-between mb-1">
-                                                            <span className="font-medium text-xs">
-                                                                {comment.commented_by}
-                                                            </span>
-                                                            <span className="text-xs text-muted-foreground">
-                                                                {formatTime(comment.commented_at)}
-                                                            </span>
+                                        comments.map(comment => {
+                                            const poster = posterDetails(comment.commented_by);
+
+                                            return (
+                                                <div key={comment.id} className="flex items-start space-x-2">
+                                                    {/* Avatar */}
+                                                    <Avatar className="w-6 h-6">
+                                                        <AvatarImage src={poster?.profile_url} alt={poster?.name} />
+                                                        <AvatarFallback>
+                                                            {poster?.name
+                                                                ? poster.name.split(' ').map(n => n[0]).join('').toUpperCase()
+                                                                : "?"}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+
+                                                    {/* Message Bubble */}
+                                                    <div className="flex-1">
+                                                        <div className="border rounded-md px-3 py-2">
+                                                            <div className="flex items-center justify-between mb-1">
+                                                                <span className="font-medium text-xs">{poster?.name ?? "Unknown"}</span>
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    {formatTime(comment.commented_at)}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-xs leading-relaxed">
+                                                                {comment.comment}
+                                                            </p>
                                                         </div>
-                                                        <p className="text-xs leading-relaxed">
-                                                            {comment.comment}
-                                                        </p>
-                                                    </div>
-                                                    <div className="text-xs text-muted-foreground mt-1 ml-2">
-                                                        {formatDate(comment.commented_at)}
+                                                        <div className="text-xs text-muted-foreground mt-1 ml-2">
+                                                            {formatDate(comment.commented_at)}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))
+                                            );
+                                        })
                                     ) : (
                                         <div className="text-center py-8">
                                             <MessageCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
@@ -232,10 +297,20 @@ const TodoActivity = ({ todo }: { todo: Todo }) => {
                             <div className="border rounded-lg p-3">
                                 <div className="flex items-end space-x-2">
                                     {/* Current User Avatar */}
-                                    <div className="w-6 h-6 border rounded-full flex items-center justify-center flex-shrink-0">
-                                        <span className="text-xs font-medium">ME</span>
-                                    </div>
-                                    
+                                    {(() => {
+                                        const me = posterDetails(userId);
+                                        return (
+                                            <Avatar className="w-6 h-6">
+                                                <AvatarImage src={me?.profile_url} alt={me?.name} />
+                                                <AvatarFallback>
+                                                    {me?.name
+                                                        ? me.name.split(' ').map(n => n[0]).join('').toUpperCase()
+                                                        : "ME"}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                        );
+                                    })()}
+
                                     {/* Input Area */}
                                     <div className="flex-1">
                                         <textarea
@@ -255,12 +330,12 @@ const TodoActivity = ({ todo }: { todo: Todo }) => {
                                             Press Enter to send, Shift+Enter for new line
                                         </div>
                                     </div>
-                                    
+
                                     {/* Send Button */}
-                                    <Button 
-                                        size="sm" 
+                                    <Button
+                                        size="sm"
                                         onClick={handleSendComment}
-                                        disabled={!newComment.trim()}
+                                        disabled={!newComment.trim() || isSending}
                                         className="px-2 py-1"
                                     >
                                         <Send className="h-3 w-3" />
@@ -269,6 +344,7 @@ const TodoActivity = ({ todo }: { todo: Todo }) => {
                             </div>
                         </div>
                     )}
+
                 </div>
             </DialogContent>
         </Dialog>

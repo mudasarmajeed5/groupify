@@ -30,6 +30,7 @@ type AssignTodoProps = {
 export function AssignTodo({ roomId, isUpdate, todo }: AssignTodoProps) {
     const { userId } = useUserStore();
     const { roomMembers } = useRoomStore();
+    const [dueDate, setDueDate] = useState<string>(new Date().toISOString());
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [priority, setPriority] = useState<"high" | "medium" | "low" | "">("");
@@ -48,6 +49,7 @@ export function AssignTodo({ roomId, isUpdate, todo }: AssignTodoProps) {
                     description,
                     todo_priority: priority,
                     assigned_to: assignedTo,
+                    due_date: dueDate,
                 })
                 .eq("id", todo.id);
 
@@ -66,7 +68,7 @@ export function AssignTodo({ roomId, isUpdate, todo }: AssignTodoProps) {
                     created_by: userId,
                     assigned_to: assignedTo,
                     status: "incomplete",
-                    due_date: new Date().toISOString(),
+                    due_date: dueDate,
                 },
             ]);
             if (error) {
@@ -128,18 +130,30 @@ export function AssignTodo({ roomId, isUpdate, todo }: AssignTodoProps) {
                     </div>
 
                     {/* Priority */}
-                    <div className="grid gap-2">
-                        <Label>Priority</Label>
-                        <Select value={priority} onValueChange={(val) => setPriority(val as any)}>
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Task Priority" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="high">High</SelectItem>
-                                <SelectItem value="medium">Medium</SelectItem>
-                                <SelectItem value="low">Low</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    <div className="flex gap-2 items-center">
+
+                        <div className="flex gap-1 items-start flex-col flex-1">
+                            <Label>Priority</Label>
+                            <Select value={priority} onValueChange={(val) => setPriority(val as any)}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Task Priority" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="high">High</SelectItem>
+                                    <SelectItem value="medium">Medium</SelectItem>
+                                    <SelectItem value="low">Low</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex gap-1 flex-col flex-1">
+                            <Label>Due Date</Label>
+                            <Input
+                                type="date"
+                                value={dueDate}
+                                onChange={(e) => setDueDate(e.target.value)}
+                                className="border rounded px-2 py-1 text-sm"
+                            />
+                        </div>
                     </div>
 
                     {/* Assign To */}
