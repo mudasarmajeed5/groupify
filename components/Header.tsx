@@ -56,7 +56,7 @@ const Header = () => {
 
   // Use profile data if available, fallback to auth metadata
   const displayName = profileUser?.name || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "User";
-  const avatarUrl = profileUser?.profile_url || "/avatars/default-avatar2.jpg";
+  const avatarUrl = profileUser?.profile_url; 
   const userEmail = authUser?.email ?? "Unknown";
   const userInitial = displayName.charAt(0).toUpperCase();
 

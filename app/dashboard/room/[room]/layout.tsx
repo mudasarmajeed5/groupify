@@ -2,6 +2,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { Room } from "@/types/dashboard-types";
 import RightSidebar from "../components/RightSidebar";
+import { Button } from "@/components/ui/button";
+import { AssignTodo } from "../components/AssignTodo";
+import { redirect } from "next/navigation";
 
 interface RoomLayoutProps {
     children: React.ReactNode;
@@ -13,6 +16,7 @@ interface RoomLayoutProps {
 export default async function RoomLayout({ children, params }: RoomLayoutProps) {
     const { room } = await params;
     const supabase = await createClient();
+
     const { data, error } = await supabase
         .from("room")
         .select("*")
@@ -32,9 +36,10 @@ export default async function RoomLayout({ children, params }: RoomLayoutProps) 
     return (
         <>
             <header className="flex p-4 justify-between border-b">
-                <h1 className="text-2xl font-semibold">{roomData.room_name}</h1>
-                <div className="flex items-center">
-                   <RightSidebar roomId={room}/>
+                <h1 className="text-2xl font-semibold">{roomData.room_name}s Room</h1>
+                <div className="flex gap-2 items-center">
+                    <AssignTodo roomId={room} />
+                    <RightSidebar roomId={room} />
                 </div>
             </header>
             <main className="min-h-[60vh]">{children}</main>

@@ -7,7 +7,7 @@ export type UserType = {
   name: string;
   profile_url: string;
   created_at: string;
-  isonline: boolean;
+  isOnline: boolean;
 };
 
 interface UserStore {
