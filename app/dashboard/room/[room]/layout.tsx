@@ -2,9 +2,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { Room } from "@/types/dashboard-types";
 import RightSidebar from "../components/RightSidebar";
-import { Button } from "@/components/ui/button";
 import { AssignTodo } from "../components/AssignTodo";
-import { redirect } from "next/navigation";
 
 interface RoomLayoutProps {
     children: React.ReactNode;

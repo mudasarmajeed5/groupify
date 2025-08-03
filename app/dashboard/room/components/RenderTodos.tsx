@@ -35,7 +35,7 @@ export const RenderTodos = ({ roomId }: { roomId: string }) => {
     // Update todo status in database
     const updateTodoStatus = async (todoId: string, newStatus: Todo['status']) => {
         try {
-            let updateData: { status: Todo['status']; completed_at?: string } = { status: newStatus };
+            const updateData: { status: Todo['status']; completed_at?: string } = { status: newStatus };
 
             if (newStatus === "completed") {
                 updateData.completed_at = new Date().toISOString();
