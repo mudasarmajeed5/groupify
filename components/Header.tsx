@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { usePathname, useRouter } from "next/navigation";
@@ -26,7 +25,7 @@ const Header = () => {
 
   useEffect(() => {
     const supabase = createClient();
-    
+
     const fetchUser = async () => {
       const { data, error } = await supabase.auth.getUser();
       if (!error && data?.user) {
@@ -56,7 +55,7 @@ const Header = () => {
 
   // Use profile data if available, fallback to auth metadata
   const displayName = profileUser?.name || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "User";
-  const avatarUrl = profileUser?.profile_url; 
+  const avatarUrl = profileUser?.profile_url;
   const userEmail = authUser?.email ?? "Unknown";
   const userInitial = displayName.charAt(0).toUpperCase();
 
@@ -68,7 +67,7 @@ const Header = () => {
 
       <div className="flex items-center space-x-4">
         {isDashboard && <Button>Invite to App</Button>}
-        
+
         {authUser ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -95,7 +94,9 @@ const Header = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Button onClick={() => router.push("/auth/login")}>Login</Button>
+          <Button asChild>
+            <Link href={"/auth/login"}>Login</Link>
+          </Button>
         )}
       </div>
     </nav>

@@ -24,7 +24,7 @@ const EditProfile = () => {
         name: '',
         profile_url: '',
         created_at: '',
-        isonline: true,
+        isOnline: true,
     });
 
     const handleChangeSettings = (e: ChangeEvent<HTMLInputElement>) => {
