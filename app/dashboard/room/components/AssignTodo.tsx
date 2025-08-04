@@ -134,7 +134,7 @@ export function AssignTodo({ roomId, isUpdate, todo }: AssignTodoProps) {
 
                         <div className="flex gap-1 items-start flex-col flex-1">
                             <Label>Priority</Label>
-                            <Select value={priority} onValueChange={(val) => setPriority(val as any)}>
+                            <Select value={priority} onValueChange={(val) => setPriority(val as "high" | "medium" | "low")}>
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Task Priority" />
                                 </SelectTrigger>

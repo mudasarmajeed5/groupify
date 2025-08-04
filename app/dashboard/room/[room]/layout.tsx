@@ -6,9 +6,7 @@ import { AssignTodo } from "../components/AssignTodo";
 
 interface RoomLayoutProps {
     children: React.ReactNode;
-    params: {
-        room: string;
-    };
+    params: Promise<{ room: string }>;
 }
 
 export default async function RoomLayout({ children, params }: RoomLayoutProps) {
