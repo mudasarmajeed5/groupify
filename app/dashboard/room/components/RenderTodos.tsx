@@ -12,6 +12,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import TodoColumn from "./TodoColumn";
 import { fetchTodos } from "../helpers/fetch-todos";
+import { toast } from "sonner";
 
 const COLUMNS: Column[] = [
     { id: "incomplete", title: "Incomplete Todos" },
@@ -33,9 +34,9 @@ export const RenderTodos = ({ roomId }: { roomId: string }) => {
     const sensors = useSensors(mouseSensor, touchSensor);
 
     // Update todo status in database
-    const updateTodoStatus = async (todoId: string, newStatus: Todo['status']) => {
+    const updateTodoStatus = async (todoId: string, newStatus: Todo['status'], completedAt: string | null) => {
         try {
-            const updateData: { status: Todo['status']; } = { status: newStatus };
+            const updateData: { status: Todo['status'], completed_at: string | null } = { status: newStatus, completed_at: completedAt };
 
             const { error } = await supabase
                 .from('todos')
@@ -59,10 +60,11 @@ export const RenderTodos = ({ roomId }: { roomId: string }) => {
         const taskId = active.id as string;
         const newStatus = over.id as Todo['status'];
         let completedAt: string | null;
-        if(newStatus === "completed"){
-           completedAt = new Date().toISOString();
+        if (newStatus === "completed") {
+            completedAt = new Date().toISOString();
+            toast.success(`${newStatus},${completedAt}`);
         }
-        else{
+        else {
             completedAt = null;
         }
         // Optimistic update - update UI immediately
@@ -73,7 +75,7 @@ export const RenderTodos = ({ roomId }: { roomId: string }) => {
         );
 
         // Update in database
-        updateTodoStatus(taskId, newStatus);
+        updateTodoStatus(taskId, newStatus, completedAt);
     }
 
     const getTodos = async () => {
@@ -100,14 +102,14 @@ export const RenderTodos = ({ roomId }: { roomId: string }) => {
                 (payload) => {
 
                     if (payload.eventType === 'INSERT') {
-                        
-                        console.log("Event fired for INSERT : ",payload.old);
+
+                        console.log("Event fired for INSERT : ", payload.old);
                         const newTodo = payload.new as Todo;
                         setTodos(prevTodos => [...prevTodos, newTodo]);
                     }
                     else if (payload.eventType === 'UPDATE') {
-                        
-                        console.log("Event fired for Update : ",payload.old);
+
+                        console.log("Event fired for Update : ", payload.old);
                         const updatedTodo = payload.new as Todo;
                         setTodos(prevTodos =>
                             prevTodos.map(todo =>
@@ -116,7 +118,7 @@ export const RenderTodos = ({ roomId }: { roomId: string }) => {
                         );
                     }
                     else if (payload.eventType === 'DELETE') {
-                        console.log("Event fired for DELETE : ",payload.old);
+                        console.log("Event fired for DELETE : ", payload.old);
                         const deletedTodo = payload.old as Todo;
                         setTodos(prevTodos =>
                             prevTodos.filter(todo => todo.id !== deletedTodo.id)
